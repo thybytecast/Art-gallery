@@ -3,14 +3,14 @@
 <head>
     <title>Windows 98 Art Gallery</title>
     <style>
-        /* Properly scaling wallpaper */
+        /* Proper wallpaper scaling */
         body {
             margin: 0;
             height: 100vh;
             width: 100vw;
             overflow: hidden;
             background: url("wallpaper.jpg") no-repeat center center fixed;
-            background-size: cover; /* <-- fixes scaling */
+            background-size: cover;
             font-family: "MS Sans Serif", Tahoma, sans-serif;
         }
 
@@ -112,7 +112,7 @@
             width: 100%;
         }
 
-        /* Taskbar (fixed and restored) */
+        /* Taskbar */
         .taskbar {
             position: fixed;
             bottom: 0;
@@ -203,13 +203,8 @@
 
         <div class="content">
             <h1>Windows 98 Art Gallery</h1>
-            <p>Click an image to open it.</p>
-
-            <div class="gallery">
-                <img src="art/art1.jpg" data-full="art/art1.jpg">
-                <img src="art/art2.jpg" data-full="art/art2.jpg">
-                <img src="art/art3.jpg" data-full="art/art3.jpg">
-            </div>
+            <p>Your images automatically load from the GitHub <b>/art</b> directory.</p>
+            <div class="gallery"></div>
         </div>
     </div>
 
@@ -248,28 +243,45 @@
         }
         makeDraggable(document.getElementById("mainWindow"));
 
-        /* --- Image Viewer Popups --- */
-        document.querySelectorAll(".gallery img").forEach(img => {
-            img.addEventListener("click", () => {
-                const viewer = document.createElement("div");
-                viewer.className = "viewer-window";
+        /* --- GitHub API Auto Gallery Loader --- */
+        fetch("https://api.github.com/repos/thybytecast/Art-gallery/contents/art")
+            .then(r => r.json())
+            .then(files => {
+                const gallery = document.querySelector(".gallery");
 
-                viewer.innerHTML = `
-                    <div class="title-bar">
-                        <div>Image Viewer</div>
-                        <div class="title-bar-buttons">
-                            <span onclick="this.parentElement.parentElement.parentElement.remove()"></span>
-                        </div>
-                    </div>
-                    <img src="${img.dataset.full}">
-                `;
+                files.forEach(file => {
+                    if (file.name.match(/\.(jpg|jpeg|png|gif)$/i)) {
+                        const img = document.createElement("img");
+                        img.src = file.download_url;
+                        img.dataset.full = file.download_url;
 
-                document.body.appendChild(viewer);
-                makeDraggable(viewer);
+                        img.onclick = () => openImageViewer(file.download_url);
+
+                        gallery.appendChild(img);
+                    }
+                });
             });
-        });
 
-        /* --- Start menu --- */
+        /* --- Image Viewer Popup --- */
+        function openImageViewer(url) {
+            const viewer = document.createElement("div");
+            viewer.className = "viewer-window";
+
+            viewer.innerHTML = `
+                <div class="title-bar">
+                    <div>Image Viewer</div>
+                    <div class="title-bar-buttons">
+                        <span onclick="this.parentElement.parentElement.parentElement.remove()"></span>
+                    </div>
+                </div>
+                <img src="${url}">
+            `;
+
+            document.body.appendChild(viewer);
+            makeDraggable(viewer);
+        }
+
+        /* --- Start Menu --- */
         function toggleStartMenu() {
             const menu = document.getElementById("startMenu");
             menu.style.display = menu.style.display === "block" ? "none" : "block";
@@ -281,7 +293,7 @@
             }
         });
 
-        /* --- Live clock --- */
+        /* --- Clock --- */
         function updateClock() {
             document.getElementById("clock").innerText =
                 new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
