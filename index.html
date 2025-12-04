@@ -3,7 +3,6 @@
 <head>
     <title>Windows 98 Art Gallery</title>
     <style>
-        /* Proper wallpaper scaling */
         body {
             margin: 0;
             height: 100vh;
@@ -38,17 +37,18 @@
             image-rendering: pixelated;
         }
 
-        /* Windows */
-        .window {
+        /* Windows (core) */
+        .window,
+        .viewer-window {
             position: absolute;
-            width: 700px;
             background: #C0C0C0;
             border: 2px solid #FFF;
             border-right-color: #000;
             border-bottom-color: #000;
-            top: 120px;
-            left: 200px;
-            z-index: 10;
+            min-width: 200px;
+            min-height: 150px;
+            box-sizing: border-box;
+            resize: none; /* manual resizing only */
         }
 
         .title-bar {
@@ -80,6 +80,18 @@
             overflow-y: auto;
         }
 
+        /* Resize grip */
+        .resizer {
+            width: 14px;
+            height: 14px;
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            cursor: se-resize;
+            background: url('data:image/gif;base64,R0lGODlhDAAMAJEAAAAAAP///wAAACH5BAEAAAIALAAAAAAMAAwAAAIRhI+py+0Po5y02ouz3pwXADs=') no-repeat center;
+            image-rendering: pixelated;
+        }
+
         /* Gallery */
         .gallery {
             display: grid;
@@ -95,19 +107,7 @@
             cursor: pointer;
         }
 
-        /* Popup viewer */
-        .viewer-window {
-            position: absolute;
-            top: 150px;
-            left: 250px;
-            width: 400px;
-            background: #C0C0C0;
-            border: 2px solid #FFF;
-            border-right-color: #000;
-            border-bottom-color: #000;
-            z-index: 50;
-        }
-
+        /* Viewer pop-up */
         .viewer-window img {
             width: 100%;
         }
@@ -174,26 +174,14 @@
 
     <!-- Desktop icons -->
     <div class="desktop">
-        <div class="icon">
-            <img src="icons/mycomputer.png">
-            <div>My Computer</div>
-        </div>
-        <div class="icon">
-            <img src="icons/bin.png">
-            <div>Recycle Bin</div>
-        </div>
-        <div class="icon">
-            <img src="icons/network.png">
-            <div>Network</div>
-        </div>
-        <div class="icon">
-            <img src="icons/folder.png">
-            <div>My Art</div>
-        </div>
+        <div class="icon"><img src="icons/mycomputer.png"><div>My Computer</div></div>
+        <div class="icon"><img src="icons/bin.png"><div>Recycle Bin</div></div>
+        <div class="icon"><img src="icons/network.png"><div>Network</div></div>
+        <div class="icon"><img src="icons/folder.png"><div>My Art</div></div>
     </div>
 
-    <!-- Main window -->
-    <div class="window" id="mainWindow">
+    <!-- Main gallery window -->
+    <div class="window" id="mainWindow" style="top:120px; left:200px; width:700px; height:500px;">
         <div class="title-bar">
             <div>My Art Gallery</div>
             <div class="title-bar-buttons">
@@ -202,105 +190,158 @@
         </div>
 
         <div class="content">
-            <h1>Windows 98 Art Gallery</h1>
-            <p>Your images automatically load from the GitHub <b>/art</b> directory.</p>
+            <h1>Art Gallery</h1>
+            <p>all drawn my me! <b>/art</b>.</p>
             <div class="gallery"></div>
         </div>
+
+        <div class="resizer"></div>
     </div>
 
     <!-- Taskbar -->
     <div class="taskbar">
         <div class="start-button" onclick="toggleStartMenu()"><b>Start</b></div>
-        <div class="clock" id="clock">12:00 PM</div>
+        <div class="clock" id="clock"></div>
     </div>
 
     <!-- Start menu -->
     <div class="start-menu" id="startMenu">
-        <div onclick="alert('Programs not implemented yet')">Programs</div>
-        <div onclick="alert('Windows 98 Art Gallery!')">About</div>
+        <div onclick="alert('Programs are not implemented yet and will never BE inplemented. keep dreaming.')">Programs</div>
+        <div onclick="alert('a simple archive of my art.')">About</div>
     </div>
 
-    <script>
-        /* --- Draggable windows --- */
-        function makeDraggable(el) {
-            const bar = el.querySelector(".title-bar");
-            let isDown = false, offsetX = 0, offsetY = 0;
+<script>
+/* ===========================
+    DRAGGABLE WINDOWS
+=========================== */
+function makeDraggable(win) {
+    const bar = win.querySelector(".title-bar");
+    let isDown = false, offsetX = 0, offsetY = 0;
 
-            bar.addEventListener("mousedown", e => {
-                isDown = true;
-                offsetX = e.clientX - el.offsetLeft;
-                offsetY = e.clientY - el.offsetTop;
-                el.style.zIndex = parseInt(el.style.zIndex || 10) + 1;
-            });
+    bar.addEventListener("mousedown", e => {
+        isDown = true;
+        offsetX = e.clientX - win.offsetLeft;
+        offsetY = e.clientY - win.offsetTop;
+        win.style.zIndex = parseInt(win.style.zIndex || 10) + 1;
+    });
 
-            document.addEventListener("mouseup", () => isDown = false);
+    document.addEventListener("mouseup", () => isDown = false);
 
-            document.addEventListener("mousemove", e => {
-                if (!isDown) return;
-                el.style.left = (e.clientX - offsetX) + "px";
-                el.style.top = (e.clientY - offsetY) + "px";
-            });
-        }
-        makeDraggable(document.getElementById("mainWindow"));
+    document.addEventListener("mousemove", e => {
+        if (!isDown) return;
+        win.style.left = (e.clientX - offsetX) + "px";
+        win.style.top = (e.clientY - offsetY) + "px";
+    });
+}
 
-        /* --- GitHub API Auto Gallery Loader --- */
-        fetch("https://api.github.com/repos/thybytecast/Art-gallery/contents/art")
-            .then(r => r.json())
-            .then(files => {
-                const gallery = document.querySelector(".gallery");
+makeDraggable(document.getElementById("mainWindow"));
 
-                files.forEach(file => {
-                    if (file.name.match(/\.(jpg|jpeg|png|gif)$/i)) {
-                        const img = document.createElement("img");
-                        img.src = file.download_url;
-                        img.dataset.full = file.download_url;
+/* ===========================
+    RESIZABLE WINDOWS
+=========================== */
+function enableResize(win) {
+    const resizer = win.querySelector(".resizer");
 
-                        img.onclick = () => openImageViewer(file.download_url);
+    let isResizing = false;
 
-                        gallery.appendChild(img);
-                    }
-                });
-            });
+    resizer.addEventListener("mousedown", e => {
+        e.preventDefault();
+        isResizing = true;
 
-        /* --- Image Viewer Popup --- */
-        function openImageViewer(url) {
-            const viewer = document.createElement("div");
-            viewer.className = "viewer-window";
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const startWidth = parseInt(window.getComputedStyle(win).width);
+        const startHeight = parseInt(window.getComputedStyle(win).height);
 
-            viewer.innerHTML = `
-                <div class="title-bar">
-                    <div>Image Viewer</div>
-                    <div class="title-bar-buttons">
-                        <span onclick="this.parentElement.parentElement.parentElement.remove()"></span>
-                    </div>
-                </div>
-                <img src="${url}">
-            `;
-
-            document.body.appendChild(viewer);
-            makeDraggable(viewer);
+        function mouseMove(e) {
+            if (!isResizing) return;
+            win.style.width = (startWidth + (e.clientX - startX)) + "px";
+            win.style.height = (startHeight + (e.clientY - startY)) + "px";
         }
 
-        /* --- Start Menu --- */
-        function toggleStartMenu() {
-            const menu = document.getElementById("startMenu");
-            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        function mouseUp() {
+            isResizing = false;
+            document.removeEventListener("mousemove", mouseMove);
+            document.removeEventListener("mouseup", mouseUp);
         }
 
-        document.addEventListener("click", e => {
-            if (!e.target.closest(".start-button") && !e.target.closest(".start-menu")) {
-                document.getElementById("startMenu").style.display = "none";
+        document.addEventListener("mousemove", mouseMove);
+        document.addEventListener("mouseup", mouseUp);
+    });
+}
+
+enableResize(document.getElementById("mainWindow"));
+
+/* ===========================
+    GITHUB API AUTO-GALLERY
+=========================== */
+fetch("https://api.github.com/repos/thybytecast/Art-gallery/contents/art")
+    .then(r => r.json())
+    .then(files => {
+        const gallery = document.querySelector(".gallery");
+
+        files.forEach(file => {
+            if (file.name.match(/\.(jpg|jpeg|png|gif)$/i)) {
+                const img = document.createElement("img");
+                img.src = file.download_url;
+
+                img.onclick = () => openImageViewer(file.download_url);
+                gallery.appendChild(img);
             }
         });
+    });
 
-        /* --- Clock --- */
-        function updateClock() {
-            document.getElementById("clock").innerText =
-                new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-    </script>
+/* ===========================
+    IMAGE VIEWER POPUP
+=========================== */
+function openImageViewer(url) {
+    const viewer = document.createElement("div");
+    viewer.className = "viewer-window";
+    viewer.style.top = "150px";
+    viewer.style.left = "250px";
+    viewer.style.width = "400px";
+    viewer.style.height = "350px";
+
+    viewer.innerHTML = `
+        <div class="title-bar">
+            <div>Image Viewer</div>
+            <div class="title-bar-buttons">
+                <span onclick="this.parentElement.parentElement.parentElement.remove()"></span>
+            </div>
+        </div>
+        <img src="${url}">
+        <div class="resizer"></div>
+    `;
+
+    document.body.appendChild(viewer);
+    makeDraggable(viewer);
+    enableResize(viewer);
+}
+
+/* ===========================
+    START MENU
+=========================== */
+function toggleStartMenu() {
+    const menu = document.getElementById("startMenu");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+}
+
+document.addEventListener("click", e => {
+    if (!e.target.closest(".start-button") && !e.target.closest(".start-menu")) {
+        document.getElementById("startMenu").style.display = "none";
+    }
+});
+
+/* ===========================
+    CLOCK
+=========================== */
+function updateClock() {
+    document.getElementById("clock").innerText =
+        new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+setInterval(updateClock, 1000);
+updateClock();
+</script>
 
 </body>
 </html>
