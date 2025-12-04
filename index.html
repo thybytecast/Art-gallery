@@ -37,7 +37,7 @@
             image-rendering: pixelated;
         }
 
-        /* Windows (core) */
+        /* Windows */
         .window,
         .viewer-window {
             position: absolute;
@@ -94,22 +94,31 @@
 
         /* Gallery */
         .gallery {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            display: flex;
+            flex-wrap: wrap;
             gap: 10px;
+            justify-content: flex-start;
         }
 
-        .gallery img {
-            width: 100%;
+        .gallery .img-box {
+            display: inline-block;
             border: 2px solid #FFF;
             border-right-color: #000;
             border-bottom-color: #000;
+            background: #C0C0C0; /* opaque for PNGs */
+            padding: 2px;
+            box-sizing: border-box;
             cursor: pointer;
         }
 
-        /* Viewer pop-up */
-        .viewer-window img {
-            width: 100%;
+        .gallery .img-box img {
+            display: block;
+            width: auto;
+            height: auto;
+            max-width: 300px;  /* scale down large images */
+            max-height: 300px;
+            object-fit: contain;
+            background: #C0C0C0;
         }
 
         /* Taskbar */
@@ -190,8 +199,8 @@
         </div>
 
         <div class="content">
-            <h1>Art Gallery</h1>
-            <p>all drawn my me! <b>/art</b>.</p>
+            <h1>Windows 98 Art Gallery</h1>
+            <p>Images auto-loaded from GitHub <b>/art</b>.</p>
             <div class="gallery"></div>
         </div>
 
@@ -206,14 +215,12 @@
 
     <!-- Start menu -->
     <div class="start-menu" id="startMenu">
-        <div onclick="alert('Programs are not implemented yet and will never BE inplemented. keep dreaming.')">Programs</div>
-        <div onclick="alert('a simple archive of my art.')">About</div>
+        <div onclick="alert('Programs are not implemented yet.')">Programs</div>
+        <div onclick="alert('Windows 98 Art Gallery')">About</div>
     </div>
 
 <script>
-/* ===========================
-    DRAGGABLE WINDOWS
-=========================== */
+/* DRAGGABLE WINDOWS */
 function makeDraggable(win) {
     const bar = win.querySelector(".title-bar");
     let isDown = false, offsetX = 0, offsetY = 0;
@@ -236,18 +243,14 @@ function makeDraggable(win) {
 
 makeDraggable(document.getElementById("mainWindow"));
 
-/* ===========================
-    RESIZABLE WINDOWS
-=========================== */
+/* RESIZABLE WINDOWS */
 function enableResize(win) {
     const resizer = win.querySelector(".resizer");
-
     let isResizing = false;
 
     resizer.addEventListener("mousedown", e => {
         e.preventDefault();
         isResizing = true;
-
         const startX = e.clientX;
         const startY = e.clientY;
         const startWidth = parseInt(window.getComputedStyle(win).width);
@@ -272,9 +275,7 @@ function enableResize(win) {
 
 enableResize(document.getElementById("mainWindow"));
 
-/* ===========================
-    GITHUB API AUTO-GALLERY
-=========================== */
+/* GITHUB API AUTO-GALLERY WITH AUTO-SIZED BOXES */
 fetch("https://api.github.com/repos/thybytecast/Art-gallery/contents/art")
     .then(r => r.json())
     .then(files => {
@@ -282,18 +283,29 @@ fetch("https://api.github.com/repos/thybytecast/Art-gallery/contents/art")
 
         files.forEach(file => {
             if (file.name.match(/\.(jpg|jpeg|png|gif)$/i)) {
+                const container = document.createElement("div");
+                container.className = "img-box";
+
                 const img = document.createElement("img");
                 img.src = file.download_url;
 
+                img.onload = () => {
+                    // Auto-size the box to image dimensions with limits
+                    const maxDim = 300; // max width/height
+                    const ratio = Math.min(maxDim / img.width, maxDim / img.height, 1);
+                    img.style.width = (img.width * ratio) + "px";
+                    img.style.height = (img.height * ratio) + "px";
+                };
+
                 img.onclick = () => openImageViewer(file.download_url);
-                gallery.appendChild(img);
+
+                container.appendChild(img);
+                gallery.appendChild(container);
             }
         });
     });
 
-/* ===========================
-    IMAGE VIEWER POPUP
-=========================== */
+/* IMAGE VIEWER POPUP */
 function openImageViewer(url) {
     const viewer = document.createElement("div");
     viewer.className = "viewer-window";
@@ -309,7 +321,7 @@ function openImageViewer(url) {
                 <span onclick="this.parentElement.parentElement.parentElement.remove()"></span>
             </div>
         </div>
-        <img src="${url}">
+        <img src="${url}" style="max-width:100%; max-height:100%; object-fit:contain; background:#C0C0C0;">
         <div class="resizer"></div>
     `;
 
@@ -318,9 +330,7 @@ function openImageViewer(url) {
     enableResize(viewer);
 }
 
-/* ===========================
-    START MENU
-=========================== */
+/* START MENU */
 function toggleStartMenu() {
     const menu = document.getElementById("startMenu");
     menu.style.display = menu.style.display === "block" ? "none" : "block";
@@ -332,9 +342,7 @@ document.addEventListener("click", e => {
     }
 });
 
-/* ===========================
-    CLOCK
-=========================== */
+/* CLOCK */
 function updateClock() {
     document.getElementById("clock").innerText =
         new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
