@@ -13,14 +13,42 @@
             font-family: "MS Sans Serif", Tahoma, sans-serif;
         }
 
-        /* Windows */
-        .window, .viewer-window {
+        /* Desktop icons */
+        .desktop {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1;
+            color: white;
+            text-shadow: 1px 1px 0 black;
+        }
+
+        .icon {
+            width: 64px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: default;
+            user-select: none;
+        }
+
+        .icon img {
+            width: 48px;
+            height: 48px;
+            image-rendering: pixelated;
+        }
+
+        /* Windows (core) */
+        .window,
+        .viewer-window {
             position: absolute;
             background: #C0C0C0;
             border: 2px solid #FFF;
             border-right-color: #000;
             border-bottom-color: #000;
+            min-width: 200px;
+            min-height: 150px;
             box-sizing: border-box;
+            resize: none; /* manual resizing only */
         }
 
         .title-bar {
@@ -34,6 +62,25 @@
             user-select: none;
         }
 
+        .title-bar-buttons span {
+            width: 16px;
+            height: 14px;
+            background: #C0C0C0;
+            border: 2px solid #FFF;
+            border-right-color: #000;
+            border-bottom-color: #000;
+            display: inline-block;
+            margin-left: 2px;
+            cursor: pointer;
+        }
+
+        .content {
+            padding: 15px;
+            height: calc(100vh - 200px);
+            overflow-y: auto;
+        }
+
+        /* Resize grip */
         .resizer {
             width: 14px;
             height: 14px;
@@ -45,57 +92,141 @@
             image-rendering: pixelated;
         }
 
-        /* Gallery grid boxes */
+        /* Gallery */
         .gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fill, 150px); /* fixed width boxes */
-            grid-auto-rows: 150px; /* fixed height boxes */
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 10px;
         }
 
-        .gallery .img-box {
-            background: #C0C0C0; /* opaque PNG background */
+        .gallery img {
+            width: 100%;
             border: 2px solid #FFF;
             border-right-color: #000;
             border-bottom-color: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
             cursor: pointer;
         }
 
-        .gallery .img-box img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain; /* keeps image inside box */
-            display: block;
+        /* Viewer pop-up */
+        .viewer-window img {
+            width: 100%;
+        }
+
+        /* Taskbar */
+        .taskbar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 32px;
+            background: #C0C0C0;
+            border-top: 2px solid #FFF;
+            border-bottom: 2px solid #000;
+            display: flex;
+            align-items: center;
+            padding: 3px;
+            z-index: 100;
+        }
+
+        .start-button {
+            background: #C0C0C0;
+            border: 2px solid #FFF;
+            border-right-color: #000;
+            border-bottom-color: #000;
+            padding: 2px 10px;
+            cursor: pointer;
+        }
+
+        .start-menu {
+            position: fixed;
+            bottom: 32px;
+            left: 0;
+            width: 200px;
+            background: #C0C0C0;
+            border: 2px solid #FFF;
+            border-right-color: #000;
+            border-bottom-color: #000;
+            display: none;
+            padding: 5px;
+            z-index: 1000;
+        }
+
+        .start-menu div {
+            padding: 4px;
+            cursor: pointer;
+        }
+
+        .start-menu div:hover {
+            background: #000080;
+            color: white;
+        }
+
+        .clock {
+            margin-left: auto;
+            background: #E0E0E0;
+            border: 2px solid #FFF;
+            border-right-color: #000;
+            border-bottom-color: #000;
+            padding: 3px 8px;
         }
     </style>
 </head>
 <body>
 
-<div class="window" id="mainWindow" style="top:50px; left:50px; width:700px; height:500px;">
-    <div class="title-bar">
-        <div>Art Gallery</div>
+    <!-- Desktop icons -->
+    <div class="desktop">
+        <div class="icon"><img src="icons/mycomputer.png"><div>My Computer</div></div>
+        <div class="icon"><img src="icons/bin.png"><div>Recycle Bin</div></div>
+        <div class="icon"><img src="icons/network.png"><div>Network</div></div>
+        <div class="icon"><img src="icons/folder.png"><div>My Art</div></div>
     </div>
-    <div class="content">
-        <div class="gallery"></div>
+
+    <!-- Main gallery window -->
+    <div class="window" id="mainWindow" style="top:120px; left:200px; width:700px; height:500px;">
+        <div class="title-bar">
+            <div>My Art Gallery</div>
+            <div class="title-bar-buttons">
+                <span onclick="document.getElementById('mainWindow').style.display='none'"></span>
+            </div>
+        </div>
+
+        <div class="content">
+            <h1>Windows 98 Art Gallery</h1>
+            <p>Images auto-loaded from GitHub <b>/art</b>.</p>
+            <div class="gallery"></div>
+        </div>
+
+        <div class="resizer"></div>
     </div>
-    <div class="resizer"></div>
-</div>
+
+    <!-- Taskbar -->
+    <div class="taskbar">
+        <div class="start-button" onclick="toggleStartMenu()"><b>Start</b></div>
+        <div class="clock" id="clock"></div>
+    </div>
+
+    <!-- Start menu -->
+    <div class="start-menu" id="startMenu">
+        <div onclick="alert('Programs are not implemented yet.')">Programs</div>
+        <div onclick="alert('Windows 98 Art Gallery')">About</div>
+    </div>
 
 <script>
-/* DRAGGABLE & RESIZABLE WINDOWS */
+/* ===========================
+    DRAGGABLE WINDOWS
+=========================== */
 function makeDraggable(win) {
     const bar = win.querySelector(".title-bar");
     let isDown = false, offsetX = 0, offsetY = 0;
+
     bar.addEventListener("mousedown", e => {
         isDown = true;
         offsetX = e.clientX - win.offsetLeft;
         offsetY = e.clientY - win.offsetTop;
+        win.style.zIndex = parseInt(win.style.zIndex || 10) + 1;
     });
+
     document.addEventListener("mouseup", () => isDown = false);
+
     document.addEventListener("mousemove", e => {
         if (!isDown) return;
         win.style.left = (e.clientX - offsetX) + "px";
@@ -103,12 +234,20 @@ function makeDraggable(win) {
     });
 }
 
+makeDraggable(document.getElementById("mainWindow"));
+
+/* ===========================
+    RESIZABLE WINDOWS
+=========================== */
 function enableResize(win) {
     const resizer = win.querySelector(".resizer");
+
     let isResizing = false;
+
     resizer.addEventListener("mousedown", e => {
         e.preventDefault();
         isResizing = true;
+
         const startX = e.clientX;
         const startY = e.clientY;
         const startWidth = parseInt(window.getComputedStyle(win).width);
@@ -119,77 +258,89 @@ function enableResize(win) {
             win.style.width = (startWidth + (e.clientX - startX)) + "px";
             win.style.height = (startHeight + (e.clientY - startY)) + "px";
         }
-        function mouseUp() { isResizing = false; document.removeEventListener("mousemove", mouseMove); document.removeEventListener("mouseup", mouseUp); }
+
+        function mouseUp() {
+            isResizing = false;
+            document.removeEventListener("mousemove", mouseMove);
+            document.removeEventListener("mouseup", mouseUp);
+        }
+
         document.addEventListener("mousemove", mouseMove);
         document.addEventListener("mouseup", mouseUp);
     });
 }
 
-const mainWindow = document.getElementById("mainWindow");
-makeDraggable(mainWindow);
-enableResize(mainWindow);
+enableResize(document.getElementById("mainWindow"));
 
-/* GALLERY: LOAD IMAGES FROM GITHUB */
+/* ===========================
+    GITHUB API AUTO-GALLERY
+=========================== */
 fetch("https://api.github.com/repos/thybytecast/Art-gallery/contents/art")
     .then(r => r.json())
     .then(files => {
         const gallery = document.querySelector(".gallery");
+
         files.forEach(file => {
-            if(file.name.match(/\.(jpg|jpeg|png|gif)$/i)) {
-                const box = document.createElement("div");
-                box.className = "img-box";
+            if (file.name.match(/\.(jpg|jpeg|png|gif)$/i)) {
                 const img = document.createElement("img");
                 img.src = file.download_url;
 
-                img.onload = () => {
-                    // Image viewer will resize to exact image dimensions
-                    img.dataset.width = img.naturalWidth;
-                    img.dataset.height = img.naturalHeight;
-                };
-
-                img.onclick = () => openImageViewer(img.src, img.dataset.width, img.dataset.height);
-                box.appendChild(img);
-                gallery.appendChild(box);
+                img.onclick = () => openImageViewer(file.download_url);
+                gallery.appendChild(img);
             }
         });
     });
 
-/* IMAGE VIEWER POPUP: resize to image size */
-function openImageViewer(src, width, height) {
+/* ===========================
+    IMAGE VIEWER POPUP
+=========================== */
+function openImageViewer(url) {
     const viewer = document.createElement("div");
     viewer.className = "viewer-window";
-    viewer.style.top = "100px";
-    viewer.style.left = "100px";
+    viewer.style.top = "150px";
+    viewer.style.left = "250px";
+    viewer.style.width = "400px";
+    viewer.style.height = "350px";
 
     viewer.innerHTML = `
-        <div class="title-bar">Image Viewer</div>
-        <img src="${src}" style="display:block;">
+        <div class="title-bar">
+            <div>Image Viewer</div>
+            <div class="title-bar-buttons">
+                <span onclick="this.parentElement.parentElement.parentElement.remove()"></span>
+            </div>
+        </div>
+        <img src="${url}">
         <div class="resizer"></div>
     `;
+
     document.body.appendChild(viewer);
-
-    // resize window to image size
-    const img = viewer.querySelector("img");
-    img.onload = () => {
-        let w = img.naturalWidth;
-        let h = img.naturalHeight;
-
-        // limit to viewport if too large
-        const maxWidth = window.innerWidth - 50;
-        const maxHeight = window.innerHeight - 50;
-        const ratio = Math.min(maxWidth / w, maxHeight / h, 1);
-        w *= ratio;
-        h *= ratio;
-
-        viewer.style.width = w + "px";
-        viewer.style.height = h + 24 + "px"; // 24px for title bar
-        img.style.width = w + "px";
-        img.style.height = h + "px";
-    };
-
     makeDraggable(viewer);
     enableResize(viewer);
 }
+
+/* ===========================
+    START MENU
+=========================== */
+function toggleStartMenu() {
+    const menu = document.getElementById("startMenu");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+}
+
+document.addEventListener("click", e => {
+    if (!e.target.closest(".start-button") && !e.target.closest(".start-menu")) {
+        document.getElementById("startMenu").style.display = "none";
+    }
+});
+
+/* ===========================
+    CLOCK
+=========================== */
+function updateClock() {
+    document.getElementById("clock").innerText =
+        new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+setInterval(updateClock, 1000);
+updateClock();
 </script>
 
 </body>
