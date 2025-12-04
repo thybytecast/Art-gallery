@@ -1,29 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>My Windows 98 Art Gallery</title>
+    <title>Windows 98 Art Gallery</title>
     <style>
-        /* Windows 98 Feel */
-        @font-face {
-            font-family: "MS Sans Serif";
-            src: local("Tahoma");
-        }
-
+        /* Desktop wallpaper */
         body {
             margin: 0;
-            background: #008080;
-            font-family: "MS Sans Serif", Tahoma, sans-serif;
             overflow: hidden;
+            background: url('wallpaper.jpg') center/cover; /* <-- Replace with your wallpaper file */
+            font-family: "MS Sans Serif", Tahoma, sans-serif;
         }
 
+        /* Desktop icon styling */
+        .desktop {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            text-shadow: 1px 1px 0px black;
+            font-size: 13px;
+        }
+
+        .icon {
+            width: 64px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: default;
+            user-select: none;
+        }
+
+        .icon img {
+            width: 48px;
+            height: 48px;
+            image-rendering: pixelated;
+        }
+
+        /* Windows 98 window */
         .window {
+            position: absolute;
             width: 700px;
             background: #C0C0C0;
             border: 2px solid #FFF;
             border-right-color: #000;
             border-bottom-color: #000;
-            margin: 20px auto;
-            padding-bottom: 20px;
+            top: 100px;
+            left: 200px;
+            z-index: 10;
         }
 
         .title-bar {
@@ -33,7 +55,7 @@
             font-weight: bold;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            cursor: move;
             user-select: none;
         }
 
@@ -51,11 +73,11 @@
 
         .content {
             padding: 15px;
-            height: calc(100vh - 110px);
+            height: 65vh;
             overflow-y: auto;
         }
 
-        /* Gallery */
+        /* Image gallery */
         .gallery {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -70,163 +92,113 @@
             cursor: pointer;
         }
 
-        /* Image Viewer Pop-up */
+        /* Image viewer popups */
         .viewer-window {
             position: absolute;
-            top: 50px;
-            left: 50px;
+            top: 150px;
+            left: 250px;
             width: 400px;
             background: #C0C0C0;
             border: 2px solid #FFF;
             border-right-color: #000;
             border-bottom-color: #000;
-            z-index: 10;
+            z-index: 20;
         }
 
         .viewer-window img {
             width: 100%;
             display: block;
         }
-
-        /* Taskbar */
-        .taskbar {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            height: 32px;
-            background: #C0C0C0;
-            border-top: 2px solid #FFF;
-            border-bottom: 2px solid #000;
-            display: flex;
-            align-items: center;
-            padding: 3px;
-        }
-
-        .start-button {
-            background: #C0C0C0;
-            border: 2px solid #FFF;
-            border-right-color: #000;
-            border-bottom-color: #000;
-            padding: 2px 10px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .start-menu {
-            position: fixed;
-            bottom: 32px;
-            left: 0;
-            width: 200px;
-            background: #C0C0C0;
-            border: 2px solid #FFF;
-            border-right-color: #000;
-            border-bottom-color: #000;
-            display: none;
-            padding: 5px;
-        }
-
-        .start-menu div {
-            padding: 4px;
-            cursor: pointer;
-        }
-
-        .start-menu div:hover {
-            background: #000080;
-            color: white;
-        }
-
-        .clock {
-            margin-left: auto;
-            background: #E0E0E0;
-            border: 2px solid #FFF;
-            border-right-color: #000;
-            border-bottom-color: #000;
-            padding: 3px 8px;
-        }
-
     </style>
 </head>
 <body>
 
-    <!-- MAIN WINDOW -->
-    <div class="window">
+    <!-- DESKTOP ICONS -->
+    <div class="desktop">
+        <div class="icon">
+            <img src="icons/mycomputer.png">
+            <div>My Computer</div>
+        </div>
+        <div class="icon">
+            <img src="icons/bin.png">
+            <div>Recycle Bin</div>
+        </div>
+        <div class="icon">
+            <img src="icons/network.png">
+            <div>Network</div>
+        </div>
+        <div class="icon">
+            <img src="icons/folder.png">
+            <div>My Art</div>
+        </div>
+    </div>
+
+    <!-- MAIN GALLERY WINDOW -->
+    <div class="window" id="mainWindow">
         <div class="title-bar">
             <div>My Art Gallery</div>
             <div class="title-bar-buttons">
-                <span></span><span></span><span></span>
+                <span onclick="document.getElementById('mainWindow').style.display='none'"></span>
             </div>
         </div>
 
         <div class="content">
-            <h1>Welcome to My Windows 98 Art Gallery</h1>
-            <p>Click an image to open it in a classic pop-up.</p>
+            <h1>Windows 98 Art Gallery</h1>
+            <p>Click an image to open it.</p>
 
             <div class="gallery">
                 <img src="art/art1.jpg" data-full="art/art1.jpg">
                 <img src="art/art2.jpg" data-full="art/art2.jpg">
                 <img src="art/art3.jpg" data-full="art/art3.jpg">
-                <!-- Add more images here -->
+                <!-- Add more -->
             </div>
         </div>
     </div>
 
-    <!-- TASKBAR -->
-    <div class="taskbar">
-        <div class="start-button" onclick="toggleStartMenu()">
-            <strong>Start</strong>
-        </div>
-
-        <div class="clock" id="clock">12:00 PM</div>
-    </div>
-
-    <!-- START MENU -->
-    <div class="start-menu" id="startMenu">
-        <div onclick="alert('This doesn’t do anything yet!')">Programs</div>
-        <div onclick="alert('Windows 98 vibes!')">About</div>
-    </div>
-
     <script>
-        // Start Menu Toggle
-        function toggleStartMenu() {
-            const menu = document.getElementById("startMenu");
-            menu.style.display = menu.style.display === "block" ? "none" : "block";
+        /* --- DRAGGABLE WINDOWS --- */
+        function makeDraggable(element) {
+            const titleBar = element.querySelector('.title-bar');
+            let offsetX = 0, offsetY = 0;
+            let isDown = false;
+
+            titleBar.addEventListener('mousedown', e => {
+                isDown = true;
+                offsetX = e.clientX - element.offsetLeft;
+                offsetY = e.clientY - element.offsetTop;
+                element.style.zIndex = parseInt(element.style.zIndex || 10) + 1;
+            });
+
+            document.addEventListener('mouseup', () => isDown = false);
+
+            document.addEventListener('mousemove', e => {
+                if (!isDown) return;
+                element.style.left = (e.clientX - offsetX) + "px";
+                element.style.top = (e.clientY - offsetY) + "px";
+            });
         }
 
-        // Live Clock
-        function updateClock() {
-            const c = document.getElementById("clock");
-            c.innerText = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
+        makeDraggable(document.getElementById("mainWindow"));
 
-        // Image Viewer Popup
+        /* --- POPUP IMAGE VIEWERS --- */
         document.querySelectorAll(".gallery img").forEach(img => {
             img.addEventListener("click", () => {
-                const popup = document.createElement("div");
-                popup.className = "viewer-window";
+                const viewer = document.createElement("div");
+                viewer.className = "viewer-window";
 
-                popup.innerHTML = `
-                    <div class="title-bar">
-                        <div>Image Viewer</div>
-                        <div class="title-bar-buttons">
-                            <span onclick="this.parentElement.parentElement.parentElement.remove()"></span>
-                        </div>
+                viewer.innerHTML = `
+                <div class="title-bar">
+                    <div>Image Viewer</div>
+                    <div class="title-bar-buttons">
+                        <span onclick="this.parentElement.parentElement.parentElement.remove()"></span>
                     </div>
-                    <img src="${img.dataset.full}">
+                </div>
+                <img src="${img.dataset.full}">
                 `;
 
-                document.body.appendChild(popup);
+                document.body.appendChild(viewer);
+                makeDraggable(viewer);
             });
-        });
-
-        // Close Start Menu when clicking elsewhere
-        document.addEventListener("click", e => {
-            if (!e.target.closest(".start-button") && !e.target.closest(".start-menu")) {
-                document.getElementById("startMenu").style.display = "none";
-            }
         });
     </script>
 
