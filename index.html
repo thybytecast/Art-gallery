@@ -3,6 +3,23 @@
 <head>
     <title>Windows 98 Art Gallery</title>
     <style>
+        .title-bar-buttons span {
+    width: 16px;
+    height: 14px;
+    background: #C0C0C0;
+    border: 2px solid #FFF;
+    border-right-color: #000;
+    border-bottom-color: #000;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 12px;
+    line-height: 12px;
+    color: black;
+    cursor: pointer;
+}
+
         @font-face {
     font-family: "Windows";
     src: url("windows.ttf") format("truetype");
@@ -258,16 +275,15 @@ function openImageViewer(url) {
     viewer.style.left = "250px";
     viewer.style.width = "auto";
     viewer.style.height = "auto";
-    viewer.style.paddingBottom = "20px";
 
     viewer.innerHTML = `
         <div class="title-bar">
             <div>Image Viewer</div>
             <div class="title-bar-buttons">
-                <span onclick="closeViewer(this)"></span>
+                <span onclick="closeViewer(this)">X</span>
             </div>
         </div>
-        <img src="${url}" style="display:block; max-width:90vw; max-height:80vh;">
+        <img src="${url}" style="max-width:90vw; max-height:80vh; display:block;">
         <div class="resizer"></div>
     `;
 
@@ -275,8 +291,6 @@ function openImageViewer(url) {
     makeDraggable(viewer);
     enableResize(viewer);
 }
-
-
 /* DRAGGING VIEWER WINDOWS */
 function makeDraggable(win) {
     const bar = win.querySelector(".title-bar");
