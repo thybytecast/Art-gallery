@@ -280,7 +280,7 @@ function openImageViewer(url) {
         <div class="title-bar">
             <div>Image Viewer</div>
             <div class="title-bar-buttons">
-                <span onclick="closeViewer(this)">X</span>
+                <span class="close-btn">X</span>
             </div>
         </div>
         <img src="${url}" style="max-width:90vw; max-height:80vh; display:block;">
@@ -290,6 +290,9 @@ function openImageViewer(url) {
     document.body.appendChild(viewer);
     makeDraggable(viewer);
     enableResize(viewer);
+
+    // ⭐ Direct close binding — no parent lookup needed
+    viewer.querySelector(".close-btn").onclick = () => viewer.remove();
 }
 /* DRAGGING VIEWER WINDOWS */
 function makeDraggable(win) {
